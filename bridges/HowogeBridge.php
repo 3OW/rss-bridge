@@ -6,7 +6,7 @@ final class HowogeBridge extends BridgeAbstract
 	public const URI = 'https://www.howoge.de';
 	public const DESCRIPTION = 'This bridge creates a Feed of Howoge non WBS rental offers';
 	public const MAINTAINER = '3OW';
-	public const CACHE_TIMEOUT = 3600;
+	public const CACHE_TIMEOUT = 1800;
 
 	public const PARAMETERS = [
 		'main' => [
@@ -89,20 +89,14 @@ final class HowogeBridge extends BridgeAbstract
 			$feedItem->setUid((string)$item[$this->getInput('uid')] ?? '');
 			$feedItem->setEnclosures(["url" => $baseUrl.$item[$this->getInput('image')]]);
 			
-			// get title
+			// get the different elements
 			$title = "<p><strong>Titel:</strong> ".($item[$this->getInput('title')] ?? '')."</p>";
-			// get district
 			$district = "<p><strong>Bezirk:</strong> ".($item[$this->getInput('district')] ?? '')."</p>";
-			// get area
 			$area = "<p><strong>Fläche:</strong> ".($item[$this->getInput('area')] ?? '')." qm</p>";
-			// get rent
 			$rent = "<p><strong>Miete:</strong> ".($item[$this->getInput('rent')] ?? '')."</p>";
-			// get rooms
 			$rooms = "<p><strong>Zimmer:</strong> ".($item[$this->getInput('rooms')] ?? '')."</p>";
-			//embedd image
 			$image = "<img src=\"".$baseUrl.$item[$this->getInput('image')]."\" >";
-
-			//put all into content
+			//put everything into content
 			$feedItem->setContent($title.$district.$area.$rent.$rooms.$image);
 
 			$this->items[] = $feedItem;
