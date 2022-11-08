@@ -3,7 +3,7 @@
 final class HowogeBridge extends BridgeAbstract
 {
 	public const NAME = 'Howoge bridge';
-	public const URI = 'https://www.howoge.de';
+	public const URI = 'https://www.howoge.de/wohnungen-gewerbe/wohnungssuche.html?tx_howsite_json_list%5Bpage%5D=1&tx_howsite_json_list%5Blimit%5D=12&tx_howsite_json_list%5Blang%5D=&tx_howsite_json_list%5Brent%5D=&tx_howsite_json_list%5Barea%5D=&tx_howsite_json_list%5Brooms%5D=egal&tx_howsite_json_list%5Bwbs%5D=wbs-not-necessary';
 	public const DESCRIPTION = 'This bridge creates a Feed of Howoge non WBS rental offers';
 	public const MAINTAINER = '3OW';
 	public const CACHE_TIMEOUT = 1800;
@@ -13,7 +13,7 @@ final class HowogeBridge extends BridgeAbstract
 			'json_url' => [
 				'name' => 'JSON url',
 				'type' => 'text',
-				'defaultValue' => 'https://www.howoge.de/?type=999&tx_howsite_json_list%5Baction%5D=immoList&tx_howsite_json_list%5Blimit%5D=120&tx_howsite_json_list%5Brent%5D=&tx_howsite_json_list%5Bwbs%5D=wbs-not-necessary',
+				'defaultValue' => 'https://www.howoge.de/?type=999&tx_howsite_json_list%5Baction%5D=immoList&tx_howsite_json_list%5Blimit%5D=120&tx_howsite_json_list%5Brent%5D=&tx_howsite_json_list%5Bwbs%5D=wbs-not-necessary&tx_howsite_json_list%5Bpage%5D=',
 			],
 			'items' => [
 				'name' => 'Items key',
@@ -73,33 +73,36 @@ final class HowogeBridge extends BridgeAbstract
 	{
 		$baseUrl = "https://www.howoge.de";
 		$jsonUrl = $this->getInput('json_url');
-		$data = json_decode(getContents($jsonUrl), true);
-		if (! $data) {
-			throw new \Exception('Unable to decode json');
-		}
-		if (! isset($data[$this->getInput('items')])) {
-			throw new \Exception('Unable to find any items');
-		}
+		
+		for ($i = 1; $i <=10 ; $i++) {
+  			$data = json_decode(getContents($jsonUrl.$i), true);
+			if (! $data) {
+				throw new \Exception('Unable to decode json');
+			}
+			if (! isset($data[$this->getInput('items')])) {
+				break;
+			}
 
-		foreach ($data[$this->getInput('items')] as $item) {
-			$feedItem = new FeedItem();
+			foreach ($data[$this->getInput('items')] as $item) {
+				$feedItem = new FeedItem();
 
-			$feedItem->setTitle($item[$this->getInput('notice')] ?? $item[$this->getInput('title')]);
-			$feedItem->setURI($baseUrl.$item[$this->getInput('url')] ?? '');
-			$feedItem->setUid((string)$item[$this->getInput('uid')] ?? '');
-			$feedItem->setEnclosures(["url" => $baseUrl.$item[$this->getInput('image')]]);
-			
-			// get the different elements
-			$title = "<p><strong>Titel:</strong> ".($item[$this->getInput('title')] ?? '')."</p>";
-			$district = "<p><strong>Bezirk:</strong> ".($item[$this->getInput('district')] ?? '')."</p>";
-			$area = "<p><strong>Fläche:</strong> ".($item[$this->getInput('area')] ?? '')." qm</p>";
-			$rent = "<p><strong>Miete:</strong> ".($item[$this->getInput('rent')] ?? '')."</p>";
-			$rooms = "<p><strong>Zimmer:</strong> ".($item[$this->getInput('rooms')] ?? '')."</p>";
-			$image = "<img src=\"".$baseUrl.$item[$this->getInput('image')]."\" >";
-			//put everything into content
-			$feedItem->setContent($title.$district.$area.$rent.$rooms.$image);
+				$feedItem->setTitle($item[$this->getInput('notice')] ?? $item[$this->getInput('title')]);
+				$feedItem->setURI($baseUrl.$item[$this->getInput('url')] ?? '');
+				$feedItem->setUid((string)$item[$this->getInput('uid')] ?? '');
+				$feedItem->setEnclosures(["url" => $baseUrl.$item[$this->getInput('image')]]);
+				
+				// get the different elements
+				$title = "<p><strong>Titel:</strong> ".($item[$this->getInput('title')] ?? '')."</p>";
+				$district = "<p><strong>Bezirk:</strong> ".($item[$this->getInput('district')] ?? '')."</p>";
+				$area = "<p><strong>Fläche:</strong> ".($item[$this->getInput('area')] ?? '')." qm</p>";
+				$rent = "<p><strong>Miete:</strong> ".($item[$this->getInput('rent')] ?? '')."</p>";
+				$rooms = "<p><strong>Zimmer:</strong> ".($item[$this->getInput('rooms')] ?? '')."</p>";
+				$image = "<img src=\"".$baseUrl.$item[$this->getInput('image')]."\" >";
+				//put everything into content
+				$feedItem->setContent($title.$district.$area.$rent.$rooms.$image);
 
-			$this->items[] = $feedItem;
+				$this->items[] = $feedItem;
+			}
 		}
 	}
 }
